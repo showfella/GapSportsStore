@@ -10,10 +10,11 @@ using GapSportsStore.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Identity;
 
 namespace GapSportsStore.Models
 {
-    
+
     public class Startup
     {
         public Startup(IConfiguration confguration) => Configuration = confguration;
@@ -22,8 +23,14 @@ namespace GapSportsStore.Models
 
         public void ConfigureServices(IServiceCollection services)
         {
-             services.AddDbContext<ApplicationDbContext>(options =>
-                  options.UseSqlServer(Configuration["Data:GapSportStoreProducts:ConnectionString1"]));
+            services.AddDbContext<ApplicationDbContext>(options =>
+                 options.UseSqlServer(Configuration["Data:GapSportStoreProducts:AzConnectionString"]));
+
+            services.AddDbContext<AppIdentityDbContext>(options =>
+                    options.UseSqlServer(Configuration["Data:GapSportStoreIdentity:AzConnectionString"]));
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                    .AddEntityFrameworkStores<AppIdentityDbContext>()
+                    .AddDefaultTokenProviders();
 
             services.AddTransient<IProductRepository, EFProductRepository>(); //FakeProductRepository>();
 
@@ -32,9 +39,9 @@ namespace GapSportsStore.Models
             services.AddTransient<IOrderRepository, EFOrderRepository>();
 
             services.AddMvc(option => option.EnableEndpointRouting = false);
-                     
+
             services.AddMemoryCache();
-         
+
             services.AddSession();
         }
 
@@ -46,12 +53,21 @@ namespace GapSportsStore.Models
                 app.UseStatusCodePages();
             }
 
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseStatusCodePages();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+            }
+
             app.UseStaticFiles();
-
-          
             app.UseSession();
-
+            app.UseAuthentication();
             app.UseMvc(routes =>
+
             {
                 routes.MapRoute(
                     name: null,
@@ -78,9 +94,10 @@ namespace GapSportsStore.Models
 
                 routes.MapRoute(name: null, template: "{controller}/{action}/{id?}");
 
-              
+
             });
-           SeedData.EnsurePopulated(app);
+            //SeedData.EnsurePopulated(app);
+            //IdentitySeedData.EnsurePopulated(app);
         }
     }
 }

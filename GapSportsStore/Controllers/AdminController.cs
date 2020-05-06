@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using GapSportsStore.Models;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GapSportsStore.Controllers
 {
+    [Authorize]
     public class AdminController : Controller
     {
         private IProductRepository repository;
@@ -42,6 +44,13 @@ namespace GapSportsStore.Controllers
             }
             return RedirectToAction("Index");
         }
+            [HttpPost]
+        public IActionResult SeedDatabase()
+        {
+            SeedData.EnsurePopulated(HttpContext.RequestServices);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
+
         
